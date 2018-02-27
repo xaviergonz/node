@@ -378,9 +378,8 @@ class Code::BodyDescriptor final : public BodyDescriptorBase {
     IteratePointers(obj, kRelocationInfoOffset, kDataStart, v);
 
     RelocIterator it(Code::cast(obj), mode_mask);
-    Isolate* isolate = obj->GetIsolate();
     for (; !it.done(); it.next()) {
-      it.rinfo()->Visit(isolate, v);
+      it.rinfo()->Visit(v);
     }
   }
 
@@ -451,6 +450,7 @@ ReturnType BodyDescriptorApply(InstanceType type, T1 p1, T2 p2, T3 p3) {
   switch (type) {
     case HASH_TABLE_TYPE:
     case FIXED_ARRAY_TYPE:
+    case SCOPE_INFO_TYPE:
       return Op::template apply<FixedArray::BodyDescriptor>(p1, p2, p3);
     case FIXED_DOUBLE_ARRAY_TYPE:
       return ReturnType();
@@ -460,6 +460,8 @@ ReturnType BodyDescriptorApply(InstanceType type, T1 p1, T2 p2, T3 p3) {
       return Op::template apply<DescriptorArray::BodyDescriptor>(p1, p2, p3);
     case TRANSITION_ARRAY_TYPE:
       return Op::template apply<TransitionArray::BodyDescriptor>(p1, p2, p3);
+    case FEEDBACK_CELL_TYPE:
+      return Op::template apply<FeedbackCell::BodyDescriptor>(p1, p2, p3);
     case FEEDBACK_VECTOR_TYPE:
       return Op::template apply<FeedbackVector::BodyDescriptor>(p1, p2, p3);
     case JS_OBJECT_TYPE:
@@ -564,6 +566,9 @@ ReturnType BodyDescriptorApply(InstanceType type, T1 p1, T2 p2, T3 p3) {
       } else {
         return Op::template apply<StructBodyDescriptor>(p1, p2, p3);
       }
+    case LOAD_HANDLER_TYPE:
+    case STORE_HANDLER_TYPE:
+      return Op::template apply<StructBodyDescriptor>(p1, p2, p3);
     default:
       PrintF("Unknown type: %d\n", type);
       UNREACHABLE();

@@ -58,8 +58,6 @@ bool Scavenger::MigrateObject(Map* map, HeapObject* source, HeapObject* target,
   }
 
   if (V8_UNLIKELY(is_logging_)) {
-    // Update NewSpace stats if necessary.
-    RecordCopiedObject(target);
     heap()->OnMoveEvent(target, source, size);
   }
 
@@ -230,9 +228,8 @@ void Scavenger::ScavengeObject(HeapObject** p, HeapObject* object) {
   // If the first word is a forwarding address, the object has already been
   // copied.
   if (first_word.IsForwardingAddress()) {
-    HeapObject* dest = first_word.ToForwardingAddress();
-    DCHECK(object->GetIsolate()->heap()->InFromSpace(*p));
-    base::AsAtomicPointer::Relaxed_Store(p, dest);
+    DCHECK(heap()->InFromSpace(*p));
+    *p = first_word.ToForwardingAddress();
     return;
   }
 

@@ -17,6 +17,7 @@
 #include "src/lookup-cache.h"
 #include "src/objects-inl.h"
 #include "src/objects/arguments.h"
+#include "src/objects/data-handler.h"
 #include "src/objects/debug-objects.h"
 #include "src/objects/descriptor-array.h"
 #include "src/objects/dictionary.h"
@@ -69,6 +70,11 @@ const Heap::StructTable Heap::struct_table[] = {
   {NAME##_TYPE, Name::kSize, k##Name##MapRootIndex},
     STRUCT_LIST(STRUCT_TABLE_ELEMENT)
 #undef STRUCT_TABLE_ELEMENT
+
+#define DATA_HANDLER_ELEMENT(NAME, Name, Size, name) \
+  {NAME##_TYPE, Name::kSizeWithData##Size, k##Name##Size##MapRootIndex},
+        DATA_HANDLER_LIST(DATA_HANDLER_ELEMENT)
+#undef DATA_HANDLER_ELEMENT
 };
 
 namespace {
@@ -188,9 +194,9 @@ bool Heap::CreateInitialMaps() {
   FinalizePartialMap(this, fixed_cow_array_map());
   FinalizePartialMap(this, descriptor_array_map());
   FinalizePartialMap(this, undefined_map());
-  undefined_map()->set_is_undetectable();
+  undefined_map()->set_is_undetectable(true);
   FinalizePartialMap(this, null_map());
-  null_map()->set_is_undetectable();
+  null_map()->set_is_undetectable(true);
   FinalizePartialMap(this, the_hole_map());
   for (unsigned i = 0; i < arraysize(struct_table); ++i) {
     const StructTable& entry = struct_table[i];
@@ -216,7 +222,7 @@ bool Heap::CreateInitialMaps() {
           (constructor_function_index));                          \
     }
 
-    ALLOCATE_VARSIZE_MAP(FIXED_ARRAY_TYPE, scope_info)
+    ALLOCATE_VARSIZE_MAP(SCOPE_INFO_TYPE, scope_info)
     ALLOCATE_VARSIZE_MAP(FIXED_ARRAY_TYPE, module_info)
     ALLOCATE_VARSIZE_MAP(FEEDBACK_VECTOR_TYPE, feedback_vector)
     ALLOCATE_PRIMITIVE_MAP(HEAP_NUMBER_TYPE, HeapNumber::kSize, heap_number,
@@ -283,11 +289,16 @@ bool Heap::CreateInitialMaps() {
     ALLOCATE_MAP(CELL_TYPE, Cell::kSize, cell)
     ALLOCATE_MAP(PROPERTY_CELL_TYPE, PropertyCell::kSize, global_property_cell)
     ALLOCATE_MAP(WEAK_CELL_TYPE, WeakCell::kSize, weak_cell)
-    ALLOCATE_MAP(CELL_TYPE, Cell::kSize, no_closures_cell)
-    ALLOCATE_MAP(CELL_TYPE, Cell::kSize, one_closure_cell)
-    ALLOCATE_MAP(CELL_TYPE, Cell::kSize, many_closures_cell)
     ALLOCATE_MAP(FILLER_TYPE, kPointerSize, one_pointer_filler)
     ALLOCATE_MAP(FILLER_TYPE, 2 * kPointerSize, two_pointer_filler)
+
+    // The "no closures" and "one closure" FeedbackCell maps need
+    // to be marked unstable because their objects can change maps.
+    ALLOCATE_MAP(FEEDBACK_CELL_TYPE, FeedbackCell::kSize, no_closures_cell)
+    no_closures_cell_map()->mark_unstable();
+    ALLOCATE_MAP(FEEDBACK_CELL_TYPE, FeedbackCell::kSize, one_closure_cell)
+    one_closure_cell_map()->mark_unstable();
+    ALLOCATE_MAP(FEEDBACK_CELL_TYPE, FeedbackCell::kSize, many_closures_cell)
 
     ALLOCATE_VARSIZE_MAP(TRANSITION_ARRAY_TYPE, transition_array)
 
@@ -297,8 +308,11 @@ bool Heap::CreateInitialMaps() {
     ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, name_dictionary)
     ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, global_dictionary)
     ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, number_dictionary)
+    ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, simple_number_dictionary)
     ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, string_table)
     ALLOCATE_VARSIZE_MAP(HASH_TABLE_TYPE, weak_hash_table)
+
+    ALLOCATE_VARSIZE_MAP(FIXED_ARRAY_TYPE, array_list)
 
     ALLOCATE_VARSIZE_MAP(FIXED_ARRAY_TYPE, function_context)
     ALLOCATE_VARSIZE_MAP(FIXED_ARRAY_TYPE, catch_context)
@@ -467,7 +481,7 @@ void Heap::CreateInitialObjects() {
 
   // Create the code_stubs dictionary. The initial size is set to avoid
   // expanding the dictionary during bootstrapping.
-  set_code_stubs(*NumberDictionary::New(isolate(), 128));
+  set_code_stubs(*SimpleNumberDictionary::New(isolate(), 128));
 
   {
     HandleScope scope(isolate());
@@ -525,7 +539,10 @@ void Heap::CreateInitialObjects() {
   set_regexp_multiple_cache(*factory->NewFixedArray(
       RegExpResultsCache::kRegExpResultsCacheSize, TENURED));
 
-  set_undefined_cell(*factory->NewCell(factory->undefined_value()));
+  // Allocate FeedbackCell for builtins.
+  Handle<FeedbackCell> many_closures_cell =
+      factory->NewManyClosuresCell(factory->undefined_value());
+  set_many_closures_cell(*many_closures_cell);
 
   // Microtask queue uses the empty fixed array as a sentinel for "empty".
   // Number of queued microtasks stored in Isolate::pending_microtask_count().
@@ -551,9 +568,7 @@ void Heap::CreateInitialObjects() {
 
   set_weak_object_to_code_table(*WeakHashTable::New(isolate(), 16, TENURED));
 
-  set_weak_new_space_object_to_code_list(
-      ArrayList::cast(*(factory->NewFixedArray(16, TENURED))));
-  weak_new_space_object_to_code_list()->SetLength(0);
+  set_weak_new_space_object_to_code_list(*ArrayList::New(isolate(), 16));
 
   set_feedback_vectors_for_profiling_tools(undefined_value());
 
@@ -632,7 +647,15 @@ void Heap::CreateInitialObjects() {
   cell->set_value(Smi::FromInt(Isolate::kProtectorValid));
   set_array_buffer_neutering_protector(*cell);
 
-  set_serialized_templates(empty_fixed_array());
+  cell = factory->NewPropertyCell(factory->empty_string());
+  cell->set_value(Smi::FromInt(Isolate::kProtectorValid));
+  set_promise_hook_protector(*cell);
+
+  cell = factory->NewPropertyCell(factory->empty_string());
+  cell->set_value(Smi::FromInt(Isolate::kProtectorValid));
+  set_promise_then_protector(*cell);
+
+  set_serialized_objects(empty_fixed_array());
   set_serialized_global_proxy_sizes(empty_fixed_array());
 
   set_weak_stack_trace_list(Smi::kZero);
@@ -643,6 +666,9 @@ void Heap::CreateInitialObjects() {
   set_deserialize_lazy_handler(Smi::kZero);
   set_deserialize_lazy_handler_wide(Smi::kZero);
   set_deserialize_lazy_handler_extra_wide(Smi::kZero);
+
+  // Initialize builtins constants table.
+  set_builtins_constants_table(empty_fixed_array());
 
   // Initialize context slot cache.
   isolate_->context_slot_cache()->Clear();

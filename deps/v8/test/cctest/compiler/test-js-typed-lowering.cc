@@ -520,7 +520,7 @@ TEST(JSToString1) {
 
   {  // ToString(number)
     Node* r = R.ReduceUnop(op, Type::Number());
-    CHECK_EQ(IrOpcode::kJSToString, r->opcode());
+    CHECK_EQ(IrOpcode::kNumberToString, r->opcode());
   }
 
   {  // ToString(string)
@@ -702,6 +702,7 @@ TEST(RemoveToNumberEffects) {
         break;
       case 2:
         effect_use = R.graph.NewNode(R.common.EffectPhi(1), ton, R.start());
+        break;
       case 3:
         effect_use = R.graph.NewNode(R.javascript.Add(R.binop_hints), ton, ton,
                                      R.context(), frame_state, ton, R.start());

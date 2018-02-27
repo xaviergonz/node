@@ -7,8 +7,10 @@
 
 #include "src/feedback-vector.h"
 #include "src/globals.h"
+#include "src/ic/handler-configuration.h"
 #include "src/isolate.h"
 #include "src/messages.h"
+#include "src/objects/data-handler.h"
 #include "src/objects/descriptor-array.h"
 #include "src/objects/dictionary.h"
 #include "src/objects/js-array.h"
@@ -29,10 +31,16 @@ class ConstantElementsPair;
 class CoverageInfo;
 class DebugInfo;
 class FreshlyAllocatedBigInt;
+class JSMap;
+class JSMapIterator;
 class JSModuleNamespace;
+class JSSet;
+class JSSetIterator;
+class JSWeakMap;
 class NewFunctionArgs;
 struct SourceRange;
 class PreParsedScopeData;
+class PromiseResolveThenableJobTask;
 class TemplateObjectDescription;
 
 enum FunctionMode {
@@ -94,7 +102,8 @@ class V8_EXPORT_PRIVATE Factory final {
       int length, PretenureFlag pretenure = NOT_TENURED);
 
   // Allocates an uninitialized fixed array. It must be filled by the caller.
-  Handle<FixedArray> NewUninitializedFixedArray(int length);
+  Handle<FixedArray> NewUninitializedFixedArray(
+      int length, PretenureFlag pretenure = NOT_TENURED);
 
   // Allocates a feedback vector whose slots are initialized with undefined
   // values.
@@ -158,14 +167,10 @@ class V8_EXPORT_PRIVATE Factory final {
 
   // Create a new TemplateObjectDescription struct.
   Handle<TemplateObjectDescription> NewTemplateObjectDescription(
-      int hash, Handle<FixedArray> raw_strings,
-      Handle<FixedArray> cooked_strings);
+      Handle<FixedArray> raw_strings, Handle<FixedArray> cooked_strings);
 
   // Create a pre-tenured empty AccessorPair.
   Handle<AccessorPair> NewAccessorPair();
-
-  // Create an empty TypeFeedbackInfo.
-  Handle<TypeFeedbackInfo> NewTypeFeedbackInfo();
 
   // Finds the internalized copy for string in the string table.
   // If not found, a new string is added to the table and returned.
@@ -322,6 +327,7 @@ class V8_EXPORT_PRIVATE Factory final {
   // Create a symbol.
   Handle<Symbol> NewSymbol();
   Handle<Symbol> NewPrivateSymbol();
+  Handle<Symbol> NewPrivateFieldSymbol();
 
   // Create a global (but otherwise uninitialized) context.
   Handle<Context> NewNativeContext();
@@ -382,15 +388,20 @@ class V8_EXPORT_PRIVATE Factory final {
   Handle<SourcePositionTableWithFrameCache>
   NewSourcePositionTableWithFrameCache(
       Handle<ByteArray> source_position_table,
-      Handle<NumberDictionary> stack_frame_cache);
+      Handle<SimpleNumberDictionary> stack_frame_cache);
+
+  // Allocate various microtasks.
+  Handle<CallableTask> NewCallableTask(Handle<JSReceiver> callable,
+                                       Handle<Context> context);
+  Handle<CallbackTask> NewCallbackTask(Handle<Foreign> callback,
+                                       Handle<Foreign> data);
+  Handle<PromiseResolveThenableJobTask> NewPromiseResolveThenableJobTask(
+      Handle<JSPromise> promise_to_resolve, Handle<JSReceiver> then,
+      Handle<JSReceiver> thenable, Handle<Context> context);
 
   // Foreign objects are pretenured when allocated by the bootstrapper.
   Handle<Foreign> NewForeign(Address addr,
                              PretenureFlag pretenure = NOT_TENURED);
-
-  // Allocate a new foreign object.  The foreign is pretenured (allocated
-  // directly in the old generation).
-  Handle<Foreign> NewForeign(const AccessorDescriptor* foreign);
 
   Handle<ByteArray> NewByteArray(int length,
                                  PretenureFlag pretenure = NOT_TENURED);
@@ -413,9 +424,9 @@ class V8_EXPORT_PRIVATE Factory final {
 
   Handle<WeakCell> NewWeakCell(Handle<HeapObject> value);
 
-  Handle<Cell> NewNoClosuresCell(Handle<Object> value);
-  Handle<Cell> NewOneClosureCell(Handle<Object> value);
-  Handle<Cell> NewManyClosuresCell(Handle<Object> value);
+  Handle<FeedbackCell> NewNoClosuresCell(Handle<HeapObject> value);
+  Handle<FeedbackCell> NewOneClosureCell(Handle<HeapObject> value);
+  Handle<FeedbackCell> NewManyClosuresCell(Handle<HeapObject> value);
 
   Handle<TransitionArray> NewTransitionArray(int capacity);
 
@@ -491,7 +502,8 @@ class V8_EXPORT_PRIVATE Factory final {
 
   // Allocates a new BigInt with {length} digits. Only to be used by
   // MutableBigInt::New*.
-  Handle<FreshlyAllocatedBigInt> NewBigInt(int length);
+  Handle<FreshlyAllocatedBigInt> NewBigInt(
+      int length, PretenureFlag pretenure = NOT_TENURED);
 
   Handle<JSObject> NewArgumentsObject(Handle<JSFunction> callee, int length);
 
@@ -552,6 +564,8 @@ class V8_EXPORT_PRIVATE Factory final {
       int capacity,
       ArrayStorageAllocationMode mode = DONT_INITIALIZE_ARRAY_ELEMENTS);
 
+  Handle<JSWeakMap> NewJSWeakMap();
+
   Handle<JSGeneratorObject> NewJSGeneratorObject(Handle<JSFunction> function);
 
   Handle<JSModuleNamespace> NewJSModuleNamespace();
@@ -588,7 +602,7 @@ class V8_EXPORT_PRIVATE Factory final {
 
   Handle<JSIteratorResult> NewJSIteratorResult(Handle<Object> value, bool done);
   Handle<JSAsyncFromSyncIterator> NewJSAsyncFromSyncIterator(
-      Handle<JSReceiver> sync_iterator);
+      Handle<JSReceiver> sync_iterator, Handle<Object> next);
 
   Handle<JSMap> NewJSMap();
   Handle<JSSet> NewJSSet();
@@ -629,12 +643,12 @@ class V8_EXPORT_PRIVATE Factory final {
 
   Handle<JSFunction> NewFunctionFromSharedFunctionInfo(
       Handle<Map> initial_map, Handle<SharedFunctionInfo> function_info,
-      Handle<Object> context_or_undefined, Handle<Cell> vector,
+      Handle<Object> context_or_undefined, Handle<FeedbackCell> feedback_cell,
       PretenureFlag pretenure = TENURED);
 
   Handle<JSFunction> NewFunctionFromSharedFunctionInfo(
       Handle<SharedFunctionInfo> function_info, Handle<Context> context,
-      Handle<Cell> vector, PretenureFlag pretenure = TENURED);
+      Handle<FeedbackCell> feedback_cell, PretenureFlag pretenure = TENURED);
 
   Handle<JSFunction> NewFunctionFromSharedFunctionInfo(
       Handle<Map> initial_map, Handle<SharedFunctionInfo> function_info,
@@ -734,6 +748,11 @@ class V8_EXPORT_PRIVATE Factory final {
   STRUCT_LIST(STRUCT_MAP_ACCESSOR)
 #undef STRUCT_MAP_ACCESSOR
 
+#define DATA_HANDLER_MAP_ACCESSOR(NAME, Name, Size, name) \
+  inline Handle<Map> name##_map();
+  DATA_HANDLER_LIST(DATA_HANDLER_MAP_ACCESSOR)
+#undef DATA_HANDLER_MAP_ACCESSOR
+
 #define STRING_ACCESSOR(name, str) inline Handle<String> name();
   INTERNALIZED_STRING_LIST(STRING_ACCESSOR)
 #undef STRING_ACCESSOR
@@ -805,6 +824,9 @@ class V8_EXPORT_PRIVATE Factory final {
   Handle<Map> ObjectLiteralMapFromCache(Handle<Context> native_context,
                                         int number_of_properties);
 
+  Handle<LoadHandler> NewLoadHandler(int data_count);
+  Handle<StoreHandler> NewStoreHandler(int data_count);
+
   Handle<RegExpMatchInfo> NewRegExpMatchInfo();
 
   // Creates a new FixedArray that holds the data associated with the
@@ -834,6 +856,8 @@ class V8_EXPORT_PRIVATE Factory final {
   // Converts the given ToPrimitive hint to it's string representation.
   Handle<String> ToPrimitiveHintString(ToPrimitiveHint hint);
 
+  Handle<JSPromise> NewJSPromise(PretenureFlag pretenure = NOT_TENURED);
+
  private:
   Isolate* isolate() { return reinterpret_cast<Isolate*>(this); }
 
@@ -861,6 +885,9 @@ class V8_EXPORT_PRIVATE Factory final {
   // Create a JSArray with no elements and no length.
   Handle<JSArray> NewJSArray(ElementsKind elements_kind,
                              PretenureFlag pretenure = NOT_TENURED);
+
+  Handle<JSPromise> NewJSPromiseWithoutHook(
+      PretenureFlag pretenure = NOT_TENURED);
 };
 
 // Utility class to simplify argument handling around JSFunction creation.

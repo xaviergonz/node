@@ -22,6 +22,7 @@ class ExternalReferenceEncoder {
   class Value {
    public:
     explicit Value(uint32_t raw) : value_(raw) {}
+    Value() : value_(0) {}
     static uint32_t Encode(uint32_t index, bool is_from_api) {
       return Index::encode(index) | IsFromAPI::encode(is_from_api);
     }
@@ -40,6 +41,7 @@ class ExternalReferenceEncoder {
   ~ExternalReferenceEncoder();
 
   Value Encode(Address key);
+  Maybe<Value> TryEncode(Address key);
 
   const char* NameOfAddress(Isolate* isolate, Address address) const;
 
@@ -113,6 +115,40 @@ class SerializerDeserializer : public RootVisitor {
       const std::vector<AccessorInfo*>& accessor_infos);
   void RestoreExternalReferenceRedirectors(
       const std::vector<CallHandlerInfo*>& call_handler_infos);
+
+#define UNUSED_SERIALIZER_BYTE_CODES(V) \
+  V(0x1d)                               \
+  V(0x1e)                               \
+  V(0x55)                               \
+  V(0x56)                               \
+  V(0x57)                               \
+  V(0x75)                               \
+  V(0x76)                               \
+  V(0x77)                               \
+  V(0x78)                               \
+  V(0x79)                               \
+  V(0x7a)                               \
+  V(0x7b)                               \
+  V(0x7c)                               \
+  V(0x7d)                               \
+  V(0x7e)                               \
+  V(0x7f)                               \
+  V(0xf0)                               \
+  V(0xf1)                               \
+  V(0xf2)                               \
+  V(0xf3)                               \
+  V(0xf4)                               \
+  V(0xf5)                               \
+  V(0xf6)                               \
+  V(0xf7)                               \
+  V(0xf8)                               \
+  V(0xf9)                               \
+  V(0xfa)                               \
+  V(0xfb)                               \
+  V(0xfc)                               \
+  V(0xfd)                               \
+  V(0xfe)                               \
+  V(0xff)
 
   // ---------- byte code range 0x00..0x7f ----------
   // Byte codes in this range represent Where, HowToCode and WhereToPoint.
@@ -194,8 +230,6 @@ class SerializerDeserializer : public RootVisitor {
   // Used for embedder-allocated backing stores for TypedArrays.
   static const int kOffHeapBackingStore = 0x1c;
 
-  // 0x1d, 0x1e unused.
-
   // Used for embedder-provided serialization data for embedder fields.
   static const int kEmbedderFieldsData = 0x1f;
 
@@ -214,8 +248,6 @@ class SerializerDeserializer : public RootVisitor {
   // 0x58..0x5f
   static const int kHotObjectWithSkip = 0x58;
   static const int kHotObjectMask = 0x07;
-
-  // 0x55..0x57, 0x75..0x7f unused.
 
   // ---------- byte code range 0x80..0xff ----------
   // First 32 root array items.
@@ -239,8 +271,6 @@ class SerializerDeserializer : public RootVisitor {
   static const int kFixedRepeat = 0xe0;
   static const int kFixedRepeatStart = kFixedRepeat - 1;
 
-  // 0xf0..0xff unused.
-
   // ---------- special values ----------
   static const int kAnyOldSpace = -1;
 
@@ -255,6 +285,7 @@ class SerializedData {
  public:
   class Reservation {
    public:
+    Reservation() : reservation_(0) {}
     explicit Reservation(uint32_t size)
         : reservation_(ChunkSizeBits::encode(size)) {}
 

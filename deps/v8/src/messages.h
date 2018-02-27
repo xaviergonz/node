@@ -259,6 +259,7 @@ class ErrorUtils : public AllStatic {
   T(Debugger, "Debugger: %")                                                   \
   T(DebuggerLoading, "Error loading debugger")                                 \
   T(DefaultOptionsMissing, "Internal % error. Default options are missing.")   \
+  T(DeletePrivateField, "Private fields can not be deleted")                   \
   T(UncaughtException, "Uncaught %")                                           \
   T(Unsupported, "Not supported")                                              \
   T(WrongServiceType, "Internal error, wrong service type: %")                 \
@@ -267,6 +268,8 @@ class ErrorUtils : public AllStatic {
   T(ApplyNonFunction,                                                          \
     "Function.prototype.apply was called on %, which is a % and not a "        \
     "function")                                                                \
+  T(ArgumentsDisallowedInInitializer,                                          \
+    "'arguments' is not allowed in class field initializer")                   \
   T(ArrayBufferTooShort,                                                       \
     "Derived ArrayBuffer constructor created a buffer which was too small")    \
   T(ArrayBufferSpeciesThis,                                                    \
@@ -308,7 +311,7 @@ class ErrorUtils : public AllStatic {
   T(ConstructorNotFunction, "Constructor % requires 'new'")                    \
   T(ConstructorNotReceiver, "The .constructor property is not an object")      \
   T(CurrencyCode, "Currency code is required with currency style.")            \
-  T(CyclicModuleDependency, "Detected cycle while resolving name '%'")         \
+  T(CyclicModuleDependency, "Detected cycle while resolving name '%' in '%'")  \
   T(DataViewNotArrayBuffer,                                                    \
     "First argument to DataView constructor must be an ArrayBuffer")           \
   T(DateType, "this is not a Date object.")                                    \
@@ -338,6 +341,7 @@ class ErrorUtils : public AllStatic {
   T(InvalidRegExpExecResult,                                                   \
     "RegExp exec method returned something other than an Object or null")      \
   T(IteratorResultNotAnObject, "Iterator result % is not an object")           \
+  T(IteratorSymbolNonCallable, "Found non-callable @@iterator")                \
   T(IteratorValueNotAnObject, "Iterator value % is not an entry object")       \
   T(LanguageID, "Language ID should be string or object.")                     \
   T(MethodCalledOnWrongObject,                                                 \
@@ -520,6 +524,7 @@ class ErrorUtils : public AllStatic {
   T(UnsupportedSuper, "Unsupported reference to 'super'")                      \
   /* RangeError */                                                             \
   T(BigIntDivZero, "Division by zero")                                         \
+  T(BigIntNegativeExponent, "Exponent must be positive")                       \
   T(BigIntTooBig, "Maximum BigInt size exceeded")                              \
   T(DateRange, "Provided date is not in valid range.")                         \
   T(ExpectedTimezoneID,                                                        \
@@ -563,7 +568,7 @@ class ErrorUtils : public AllStatic {
   T(ValueOutOfRange, "Value % out of range for % options property %")          \
   /* SyntaxError */                                                            \
   T(AmbiguousExport,                                                           \
-    "The requested module contains conflicting star exports for name '%'")     \
+    "The requested module '%' contains conflicting star exports for name '%'") \
   T(BadGetterArity, "Getter must not have any formal parameters.")             \
   T(BadSetterArity, "Setter must have exactly one formal parameter.")          \
   T(BigIntInvalidString, "Invalid BigInt string")                              \
@@ -595,6 +600,7 @@ class ErrorUtils : public AllStatic {
   T(IllegalLanguageModeDirective,                                              \
     "Illegal '%' directive in function with non-simple parameter list")        \
   T(IllegalReturn, "Illegal return statement")                                 \
+  T(IntrinsicWithSpread, "Intrinsic calls do not support spread arguments")    \
   T(InvalidRestBindingPattern,                                                 \
     "`...` must be followed by an identifier in declaration contexts")         \
   T(InvalidRestAssignmentPattern,                                              \
@@ -612,6 +618,7 @@ class ErrorUtils : public AllStatic {
     "Invalid left-hand side expression in prefix operation")                   \
   T(InvalidRegExpFlags, "Invalid flags supplied to RegExp constructor '%'")    \
   T(InvalidOrUnexpectedToken, "Invalid or unexpected token")                   \
+  T(InvalidPrivateFieldAccess, "Invalid private field '%'")                    \
   T(JsonParseUnexpectedEOS, "Unexpected end of JSON input")                    \
   T(JsonParseUnexpectedToken, "Unexpected token % in JSON at position %")      \
   T(JsonParseUnexpectedTokenNumber, "Unexpected number in JSON at position %") \
@@ -682,8 +689,6 @@ class ErrorUtils : public AllStatic {
   T(TypedArrayTooShort,                                                        \
     "Derived TypedArray constructor created an array which was too small")     \
   T(UnexpectedEOS, "Unexpected end of input")                                  \
-  T(UnexpectedFunctionSent,                                                    \
-    "function.sent expression is not allowed outside a generator")             \
   T(UnexpectedReserved, "Unexpected reserved word")                            \
   T(UnexpectedStrictReserved, "Unexpected strict mode reserved word")          \
   T(UnexpectedSuper, "'super' keyword unexpected here")                        \
@@ -698,7 +703,7 @@ class ErrorUtils : public AllStatic {
     "Lexical declaration cannot appear in a single-statement context")         \
   T(UnknownLabel, "Undefined label '%'")                                       \
   T(UnresolvableExport,                                                        \
-    "The requested module does not provide an export named '%'")               \
+    "The requested module '%' does not provide an export named '%'")           \
   T(UnterminatedArgList, "missing ) after argument list")                      \
   T(UnterminatedRegExp, "Invalid regular expression: missing /")               \
   T(UnterminatedTemplate, "Unterminated template literal")                     \
@@ -719,11 +724,10 @@ class ErrorUtils : public AllStatic {
   T(WasmTrapDivByZero, "divide by zero")                                       \
   T(WasmTrapDivUnrepresentable, "divide result unrepresentable")               \
   T(WasmTrapRemByZero, "remainder by zero")                                    \
-  T(WasmTrapFloatUnrepresentable, "integer result unrepresentable")            \
-  T(WasmTrapFuncInvalid, "invalid function")                                   \
+  T(WasmTrapFloatUnrepresentable, "float unrepresentable in integer range")    \
+  T(WasmTrapFuncInvalid, "invalid index into function table")                  \
   T(WasmTrapFuncSigMismatch, "function signature mismatch")                    \
-  T(WasmTrapInvalidIndex, "invalid index into function table")                 \
-  T(WasmTrapTypeError, "invalid type")                                         \
+  T(WasmTrapTypeError, "wasm function signature contains illegal type")        \
   T(WasmExceptionError, "wasm exception")                                      \
   /* Asm.js validation related */                                              \
   T(AsmJsInvalid, "Invalid asm.js: %")                                         \
