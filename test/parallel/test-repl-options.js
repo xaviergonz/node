@@ -24,8 +24,6 @@ const common = require('../common');
 const assert = require('assert');
 const repl = require('repl');
 
-common.globalCheck = false;
-
 // Create a dummy stream that does nothing
 const stream = new common.ArrayStream();
 
@@ -89,7 +87,19 @@ assert.strictEqual(r2.rli.input, r2.inputStream);
 assert.strictEqual(r2.rli.output, r2.outputStream);
 assert.strictEqual(r2.rli.terminal, false);
 
-// Verify that defaults are used when no arguments are provided
+// 3, breakEvalOnSigint and eval supplied together should cause a throw
+const r3 = () => repl.start({
+  breakEvalOnSigint: true,
+  eval: true
+});
+
+common.expectsError(r3, {
+  code: 'ERR_INVALID_REPL_EVAL_CONFIG',
+  type: TypeError,
+  message: 'Cannot specify both "breakEvalOnSigint" and "eval" for REPL'
+});
+
+// 4, Verify that defaults are used when no arguments are provided
 const r4 = repl.start();
 
 assert.strictEqual(r4._prompt, '> ');

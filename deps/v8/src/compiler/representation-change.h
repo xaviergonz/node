@@ -203,25 +203,29 @@ class UseInfo {
                    Truncation::Any(identify_zeros), TypeCheckKind::kSignedSmall,
                    feedback);
   }
-  static UseInfo CheckedSigned32AsWord32(IdentifyZeros identify_zeros) {
+  static UseInfo CheckedSigned32AsWord32(IdentifyZeros identify_zeros,
+                                         const VectorSlotPair& feedback) {
     return UseInfo(MachineRepresentation::kWord32,
-                   Truncation::Any(identify_zeros), TypeCheckKind::kSigned32);
+                   Truncation::Any(identify_zeros), TypeCheckKind::kSigned32,
+                   feedback);
   }
-  static UseInfo CheckedNumberAsFloat64() {
+  static UseInfo CheckedNumberAsFloat64(const VectorSlotPair& feedback) {
     return UseInfo(MachineRepresentation::kFloat64, Truncation::Any(),
-                   TypeCheckKind::kNumber);
+                   TypeCheckKind::kNumber, feedback);
   }
-  static UseInfo CheckedNumberAsWord32() {
+  static UseInfo CheckedNumberAsWord32(const VectorSlotPair& feedback) {
     return UseInfo(MachineRepresentation::kWord32, Truncation::Word32(),
-                   TypeCheckKind::kNumber);
+                   TypeCheckKind::kNumber, feedback);
   }
-  static UseInfo CheckedNumberOrOddballAsFloat64() {
+  static UseInfo CheckedNumberOrOddballAsFloat64(
+      const VectorSlotPair& feedback) {
     return UseInfo(MachineRepresentation::kFloat64, Truncation::Any(),
-                   TypeCheckKind::kNumberOrOddball);
+                   TypeCheckKind::kNumberOrOddball, feedback);
   }
-  static UseInfo CheckedNumberOrOddballAsWord32() {
+  static UseInfo CheckedNumberOrOddballAsWord32(
+      const VectorSlotPair& feedback) {
     return UseInfo(MachineRepresentation::kWord32, Truncation::Word32(),
-                   TypeCheckKind::kNumberOrOddball);
+                   TypeCheckKind::kNumberOrOddball, feedback);
   }
 
   // Undetermined representation.
@@ -333,8 +337,8 @@ class RepresentationChanger final {
   Node* InsertChangeTaggedSignedToInt32(Node* node);
   Node* InsertChangeTaggedToFloat64(Node* node);
   Node* InsertChangeUint32ToFloat64(Node* node);
-
   Node* InsertConversion(Node* node, const Operator* op, Node* use_node);
+  void InsertUnconditionalDeopt(Node* node, DeoptimizeReason reason);
 
   JSGraph* jsgraph() const { return jsgraph_; }
   Isolate* isolate() const { return isolate_; }

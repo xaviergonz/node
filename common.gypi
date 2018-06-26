@@ -27,7 +27,7 @@
 
     # Reset this number to 0 on major V8 upgrades.
     # Increment by one for each non-official patch applied to deps/v8.
-    'v8_embedder_string': '-node.6',
+    'v8_embedder_string': '-node.13',
 
     # Enable disassembler for `--print-code` v8 options
     'v8_enable_disassembler': 1,
@@ -49,10 +49,16 @@
     'conditions': [
       ['GENERATOR=="ninja"', {
         'obj_dir': '<(PRODUCT_DIR)/obj',
-        'v8_base': '<(PRODUCT_DIR)/obj/deps/v8/src/libv8_base.a',
+        'conditions': [
+          [ 'build_v8_with_gn=="true"', {
+            'v8_base': '<(PRODUCT_DIR)/obj/deps/v8/gypfiles/v8_monolith.gen/gn/obj/libv8_monolith.a',
+          }, {
+            'v8_base': '<(PRODUCT_DIR)/obj/deps/v8/gypfiles/libv8_base.a',
+          }],
+        ]
        }, {
-         'obj_dir%': '<(PRODUCT_DIR)/obj.target',
-         'v8_base%': '<(PRODUCT_DIR)/obj.target/deps/v8/src/libv8_base.a',
+        'obj_dir%': '<(PRODUCT_DIR)/obj.target',
+        'v8_base': '<(PRODUCT_DIR)/obj.target/deps/v8/gypfiles/libv8_base.a',
       }],
       ['OS == "win"', {
         'os_posix': 0,
@@ -63,9 +69,18 @@
         'os_posix': 1,
         'v8_postmortem_support%': 'true',
       }],
-      ['OS== "mac"', {
+      ['OS == "mac"', {
         'obj_dir%': '<(PRODUCT_DIR)/obj.target',
         'v8_base': '<(PRODUCT_DIR)/libv8_base.a',
+      }],
+      ['build_v8_with_gn == "true"', {
+        'conditions': [
+          ['GENERATOR == "ninja"', {
+            'v8_base': '<(PRODUCT_DIR)/obj/deps/v8/gypfiles/v8_monolith.gen/gn/obj/libv8_monolith.a',
+          }, {
+            'v8_base': '<(PRODUCT_DIR)/obj.target/v8_monolith/geni/gn/obj/libv8_monolith.a',
+          }],
+        ],
       }],
       ['openssl_fips != ""', {
         'openssl_product': '<(STATIC_LIB_PREFIX)crypto<(STATIC_LIB_SUFFIX)',
@@ -221,10 +236,18 @@
         'BufferSecurityCheck': 'true',
         'ExceptionHandling': 0, # /EHsc
         'SuppressStartupBanner': 'true',
-        # Disable "warning C4267: conversion from 'size_t' to 'int',
-        # possible loss of data".  Many originate from our dependencies
-        # and their sheer number drowns out other, more legitimate warnings.
-        'DisableSpecificWarnings': ['4267'],
+        # Disable warnings:
+        # - "C4251: class needs to have dll-interface"
+        # - "C4275: non-DLL-interface used as base for DLL-interface"
+        #   Over 10k of these warnings are generated when compiling node,
+        #   originating from v8.h. Most of them are false positives.
+        #   See also: https://github.com/nodejs/node/pull/15570
+        #   TODO: re-enable when Visual Studio fixes these upstream.
+        #
+        # - "C4267: conversion from 'size_t' to 'int'"
+        #   Many any originate from our dependencies, and their sheer number
+        #   drowns out other, more legitimate warnings.
+        'DisableSpecificWarnings': ['4251', '4275', '4267'],
         'WarnAsError': 'false',
       },
       'VCLinkerTool': {

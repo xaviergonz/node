@@ -1,15 +1,13 @@
 # Buffer
 
 <!--introduced_in=v0.1.90-->
-<!--lint disable maximum-line-length-->
 
 > Stability: 2 - Stable
 
 Prior to the introduction of [`TypedArray`], the JavaScript language had no
 mechanism for reading or manipulating streams of binary data. The `Buffer` class
-was introduced as part of the Node.js API to make it possible to interact with
-octet streams in the context of things like TCP streams and file system
-operations.
+was introduced as part of the Node.js API to enable interaction with octet
+streams in TCP streams, file system operations, and other contexts.
 
 With [`TypedArray`] now available, the `Buffer` class implements the
 [`Uint8Array`] API in a manner that is more optimized and suitable for Node.js.
@@ -81,7 +79,7 @@ to one of these new APIs.*
 
 * [`Buffer.from(array)`] returns a new `Buffer` that *contains a copy* of the
   provided octets.
-* [`Buffer.from(arrayBuffer[, byteOffset [, length]])`][`Buffer.from(arrayBuffer)`]
+* [`Buffer.from(arrayBuffer[, byteOffset[, length]])`][`Buffer.from(arrayBuf)`]
   returns a new `Buffer` that *shares the same allocated memory* as the given
   [`ArrayBuffer`].
 * [`Buffer.from(buffer)`] returns a new `Buffer` that *contains a copy* of the
@@ -194,8 +192,8 @@ Modern Web browsers follow the [WHATWG Encoding Standard][] which aliases
 both `'latin1'` and `'ISO-8859-1'` to `'win-1252'`. This means that while doing
 something like `http.get()`, if the returned charset is one of those listed in
 the WHATWG specification it is possible that the server actually returned
-win-1252-encoded data, and using `'latin1'` encoding may incorrectly decode the
-characters.
+`'win-1252'`-encoded data, and using `'latin1'` encoding may incorrectly decode
+the characters.
 
 ## Buffers and TypedArray
 <!-- YAML
@@ -223,7 +221,7 @@ elements, and not as a byte array of the target type. That is,
    `[0x1020304]` or `[0x4030201]`.
 
 It is possible to create a new `Buffer` that shares the same allocated memory as
-a [`TypedArray`] instance by using the TypeArray object's `.buffer` property.
+a [`TypedArray`] instance by using the `TypeArray` object's `.buffer` property.
 
 ```js
 const arr = new Uint16Array(2);
@@ -273,7 +271,7 @@ function:
 
 * [`Buffer.from(array)`]
 * [`Buffer.from(buffer)`]
-* [`Buffer.from(arrayBuffer[, byteOffset [, length]])`][`Buffer.from(arrayBuffer)`]
+* [`Buffer.from(arrayBuffer[, byteOffset[, length]])`][`Buffer.from(arrayBuf)`]
 * [`Buffer.from(string[, encoding])`][`Buffer.from(string)`]
 
 ## Buffers and iteration
@@ -304,7 +302,7 @@ It can be constructed in a variety of ways.
 <!-- YAML
 deprecated: v6.0.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/19524
     description: Calling this constructor emits a deprecation warning when
                  run from code outside the `node_modules` directory.
@@ -327,12 +325,12 @@ Allocates a new `Buffer` using an `array` of octets.
 const buf = new Buffer([0x62, 0x75, 0x66, 0x66, 0x65, 0x72]);
 ```
 
-### new Buffer(arrayBuffer[, byteOffset [, length]])
+### new Buffer(arrayBuffer[, byteOffset[, length]])
 <!-- YAML
 added: v3.0.0
 deprecated: v6.0.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/19524
     description: Calling this constructor emits a deprecation warning when
                  run from code outside the `node_modules` directory.
@@ -348,7 +346,7 @@ changes:
 -->
 
 > Stability: 0 - Deprecated: Use
-> [`Buffer.from(arrayBuffer[, byteOffset [, length]])`][`Buffer.from(arrayBuffer)`]
+> [`Buffer.from(arrayBuffer[, byteOffset[, length]])`][`Buffer.from(arrayBuf)`]
 > instead.
 
 * `arrayBuffer` {ArrayBuffer|SharedArrayBuffer} An [`ArrayBuffer`],
@@ -388,7 +386,7 @@ console.log(buf);
 <!-- YAML
 deprecated: v6.0.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/19524
     description: Calling this constructor emits a deprecation warning when
                  run from code outside the `node_modules` directory.
@@ -402,7 +400,8 @@ changes:
 
 > Stability: 0 - Deprecated: Use [`Buffer.from(buffer)`] instead.
 
-* `buffer` {Buffer} An existing `Buffer` to copy data from.
+* `buffer` {Buffer|Uint8Array} An existing `Buffer` or [`Uint8Array`] from which
+  to copy data.
 
 Copies the passed `buffer` data onto a new `Buffer` instance.
 
@@ -422,13 +421,14 @@ console.log(buf2.toString());
 <!-- YAML
 deprecated: v6.0.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/19524
     description: Calling this constructor emits a deprecation warning when
                  run from code outside the `node_modules` directory.
   - version: v8.0.0
     pr-url: https://github.com/nodejs/node/pull/12141
-    description: new Buffer(size) will return zero-filled memory by default.
+    description: The `new Buffer(size)` will return zero-filled memory by
+                 default.
   - version: v7.2.1
     pr-url: https://github.com/nodejs/node/pull/9529
     description: Calling this constructor no longer emits a deprecation warning.
@@ -442,9 +442,9 @@ changes:
 
 * `size` {integer} The desired length of the new `Buffer`.
 
-Allocates a new `Buffer` of `size` bytes. If the `size` is larger than
-[`buffer.constants.MAX_LENGTH`] or smaller than 0, a [`RangeError`] will be
-thrown. A zero-length `Buffer` will be created if `size` is 0.
+Allocates a new `Buffer` of `size` bytes. If `size` is larger than
+[`buffer.constants.MAX_LENGTH`] or smaller than 0, [`ERR_INVALID_OPT_VALUE`] is
+thrown. A zero-length `Buffer` is created if `size` is 0.
 
 Prior to Node.js 8.0.0, the underlying memory for `Buffer` instances
 created in this way is *not initialized*. The contents of a newly created
@@ -463,7 +463,7 @@ console.log(buf);
 <!-- YAML
 deprecated: v6.0.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/19524
     description: Calling this constructor emits a deprecation warning when
                  run from code outside the `node_modules` directory.
@@ -500,11 +500,11 @@ console.log(buf1.toString('ascii'));
 <!-- YAML
 added: v5.10.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18129
     description: Attempting to fill a non-zero length buffer with a zero length
                  buffer triggers a thrown exception.
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/17427
     description: Specifying an invalid string for `fill` triggers a thrown
                  exception.
@@ -530,9 +530,9 @@ console.log(buf);
 // Prints: <Buffer 00 00 00 00 00>
 ```
 
-Allocates a new `Buffer` of `size` bytes. If the `size` is larger than
-[`buffer.constants.MAX_LENGTH`] or smaller than 0, a [`RangeError`] will be
-thrown. A zero-length `Buffer` will be created if `size` is 0.
+Allocates a new `Buffer` of `size` bytes. If `size` is larger than
+[`buffer.constants.MAX_LENGTH`] or smaller than 0, [`ERR_INVALID_OPT_VALUE`] is
+thrown. A zero-length `Buffer` is created if `size` is 0.
 
 If `fill` is specified, the allocated `Buffer` will be initialized by calling
 [`buf.fill(fill)`][`buf.fill()`].
@@ -571,9 +571,9 @@ changes:
 
 * `size` {integer} The desired length of the new `Buffer`.
 
-Allocates a new `Buffer` of `size` bytes. If the `size` is larger than
-[`buffer.constants.MAX_LENGTH`] or smaller than 0, a [`RangeError`] will be
-thrown. A zero-length `Buffer` will be created if `size` is 0.
+Allocates a new `Buffer` of `size` bytes. If `size` is larger than
+[`buffer.constants.MAX_LENGTH`] or smaller than 0, [`ERR_INVALID_OPT_VALUE`] is
+thrown. A zero-length `Buffer` is created if `size` is 0.
 
 The underlying memory for `Buffer` instances created in this way is *not
 initialized*. The contents of the newly created `Buffer` are unknown and
@@ -615,9 +615,9 @@ added: v5.12.0
 
 * `size` {integer} The desired length of the new `Buffer`.
 
-Allocates a new `Buffer` of `size` bytes. If the `size` is larger than
-[`buffer.constants.MAX_LENGTH`] or smaller than 0, a [`RangeError`] will be
-thrown. A zero-length `Buffer` will be created if `size` is 0.
+Allocates a new `Buffer` of `size` bytes. If `size` is larger than
+[`buffer.constants.MAX_LENGTH`] or smaller than 0, [`ERR_INVALID_OPT_VALUE`] is
+thrown. A zero-length `Buffer` is created if `size` is 0.
 
 The underlying memory for `Buffer` instances created in this way is *not
 initialized*. The contents of the newly created `Buffer` are unknown and
@@ -842,7 +842,8 @@ A `TypeError` will be thrown if `arrayBuffer` is not an [`ArrayBuffer`] or a
 added: v5.10.0
 -->
 
-* `buffer` {Buffer} An existing `Buffer` to copy data from.
+* `buffer` {Buffer|Uint8Array} An existing `Buffer` or [`Uint8Array`] from which
+  to copy data.
 
 Copies the passed `buffer` data onto a new `Buffer` instance.
 
@@ -980,8 +981,8 @@ console.log(buf.toString('ascii'));
 
 ### buf.buffer
 
-The `buffer` property references the underlying `ArrayBuffer` object based on
-which this Buffer object is created.
+* {ArrayBuffer} The underlying `ArrayBuffer` object based on
+  which this `Buffer` object is created.
 
 ```js
 const arrayBuffer = new ArrayBuffer(16);
@@ -1003,7 +1004,8 @@ changes:
     description: Additional parameters for specifying offsets are supported now.
 -->
 
-* `target` {Buffer|Uint8Array} A `Buffer` or [`Uint8Array`] to compare to.
+* `target` {Buffer|Uint8Array} A `Buffer` or [`Uint8Array`] with which to
+  compare `buf`.
 * `targetStart` {integer} The offset within `target` at which to begin
   comparison. **Default:** `0`.
 * `targetEnd` {integer} The offset with `target` at which to end comparison
@@ -1058,8 +1060,8 @@ console.log(buf1.compare(buf2, 5, 6, 5));
 // Prints: 1
 ```
 
-A `RangeError` will be thrown if: `targetStart < 0`, `sourceStart < 0`,
-`targetEnd > target.byteLength` or `sourceEnd > source.byteLength`.
+[`ERR_INDEX_OUT_OF_RANGE`] is thrown if `targetStart < 0`, `sourceStart < 0`,
+`targetEnd > target.byteLength`, or `sourceEnd > source.byteLength`.
 
 ### buf.copy(target[, targetStart[, sourceStart[, sourceEnd]]])
 <!-- YAML
@@ -1148,7 +1150,8 @@ changes:
     description: The arguments can now be `Uint8Array`s.
 -->
 
-* `otherBuffer` {Buffer} A `Buffer` or [`Uint8Array`] to compare to.
+* `otherBuffer` {Buffer} A `Buffer` or [`Uint8Array`] with which to compare
+  `buf`.
 * Returns: {boolean}
 
 Returns `true` if both `buf` and `otherBuffer` have exactly the same bytes,
@@ -1169,14 +1172,14 @@ console.log(buf1.equals(buf3));
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18790
     description: Negative `end` values throw an `ERR_INDEX_OUT_OF_RANGE` error.
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18129
     description: Attempting to fill a non-zero length buffer with a zero length
                  buffer triggers a thrown exception.
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/17427
     description: Specifying an invalid string for `value` triggers a thrown
                  exception.
@@ -1279,9 +1282,10 @@ changes:
 
 * `value` {string|Buffer|Uint8Array|integer} What to search for.
 * `byteOffset` {integer} Where to begin searching in `buf`. **Default:** `0`.
-* `encoding` {string} The encoding of `value` if `value` is a string.
-  **Default:** `'utf8'`.
-* Returns: {integer} The index of the first occurrence of `value` in `buf` or
+* `encoding` {string} If `value` is a string, this is the encoding used to
+  determine the binary representation of the string that will be searched for in
+  `buf`. **Default:** `'utf8'`.
+* Returns: {integer} The index of the first occurrence of `value` in `buf`, or
   `-1` if `buf` does not contain `value`.
 
 If `value` is:
@@ -1381,13 +1385,14 @@ changes:
 * `value` {string|Buffer|Uint8Array|integer} What to search for.
 * `byteOffset` {integer} Where to begin searching in `buf`.
   **Default:** [`buf.length`]` - 1`.
-* `encoding` {string} If `value` is a string, this is its encoding.
-  **Default:** `'utf8'`.
-* Returns: {integer} The index of the last occurrence of `value` in `buf` or `-1`
-  if `buf` does not contain `value`.
+* `encoding` {string} If `value` is a string, this is the encoding used to
+  determine the binary representation of the string that will be searched for in
+  `buf`. **Default:** `'utf8'`.
+* Returns: {integer} The index of the last occurrence of `value` in `buf`, or
+  `-1` if `buf` does not contain `value`.
 
-Identical to [`buf.indexOf()`], except `buf` is searched from back to front
-instead of front to back.
+Identical to [`buf.indexOf()`], except the last occurrence of `value` is found
+rather than the first occurrence.
 
 ```js
 const buf = Buffer.from('this buffer is a buffer');
@@ -1501,13 +1506,14 @@ The `buf.parent` property is a deprecated alias for `buf.buffer`.
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 8`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 8`.
 * Returns: {number}
 
 Reads a 64-bit double from `buf` at the specified `offset` with specified
@@ -1522,10 +1528,7 @@ console.log(buf.readDoubleBE(0));
 console.log(buf.readDoubleLE(0));
 // Prints: 5.447603722011605e-270
 console.log(buf.readDoubleLE(1));
-// Throws an exception: RangeError: Index out of range
-console.log(buf.readDoubleLE(1, true));
-// Warning: reads passed end of buffer!
-// This will result in a segmentation fault! Don't do this!
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readFloatBE(offset)
@@ -1533,13 +1536,14 @@ console.log(buf.readDoubleLE(1, true));
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {number}
 
 Reads a 32-bit float from `buf` at the specified `offset` with specified
@@ -1554,23 +1558,21 @@ console.log(buf.readFloatBE(0));
 console.log(buf.readFloatLE(0));
 // Prints: 1.539989614439558e-36
 console.log(buf.readFloatLE(1));
-// Throws an exception: RangeError: Index out of range
-console.log(buf.readFloatLE(1, true));
-// Warning: reads passed end of buffer!
-// This will result in a segmentation fault! Don't do this!
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readInt8(offset)
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 1`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 1`.
 * Returns: {integer}
 
 Reads a signed 8-bit integer from `buf` at the specified `offset`.
@@ -1585,7 +1587,7 @@ console.log(buf.readInt8(0));
 console.log(buf.readInt8(1));
 // Prints: 5
 console.log(buf.readInt8(2));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readInt16BE(offset)
@@ -1593,13 +1595,14 @@ console.log(buf.readInt8(2));
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 2`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 2`.
 * Returns: {integer}
 
 Reads a signed 16-bit integer from `buf` at the specified `offset` with
@@ -1616,7 +1619,7 @@ console.log(buf.readInt16BE(0));
 console.log(buf.readInt16LE(0));
 // Prints: 1280
 console.log(buf.readInt16LE(1));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readInt32BE(offset)
@@ -1624,13 +1627,14 @@ console.log(buf.readInt16LE(1));
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {integer}
 
 Reads a signed 32-bit integer from `buf` at the specified `offset` with
@@ -1647,7 +1651,7 @@ console.log(buf.readInt32BE(0));
 console.log(buf.readInt32LE(0));
 // Prints: 83886080
 console.log(buf.readInt32LE(1));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readIntBE(offset, byteLength)
@@ -1655,14 +1659,16 @@ console.log(buf.readInt32LE(1));
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset and
-                 byteLength to uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 and `byteLength` to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - byteLength`.
-* `byteLength` {integer} Number of bytes to read. Must satisfy: `0 < byteLength <= 6`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - byteLength`.
+* `byteLength` {integer} Number of bytes to read. Must satisfy
+  `0 < byteLength <= 6`.
 * Returns: {integer}
 
 Reads `byteLength` number of bytes from `buf` at the specified `offset`
@@ -1677,22 +1683,23 @@ console.log(buf.readIntLE(0, 6).toString(16));
 console.log(buf.readIntBE(0, 6).toString(16));
 // Prints: 1234567890ab
 console.log(buf.readIntBE(1, 6).toString(16));
-// Throws ERR_INDEX_OUT_OF_RANGE:
+// Throws ERR_INDEX_OUT_OF_RANGE
 console.log(buf.readIntBE(1, 0).toString(16));
-// Throws ERR_OUT_OF_RANGE:
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readUInt8(offset)
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 1`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 1`.
 * Returns: {integer}
 
 Reads an unsigned 8-bit integer from `buf` at the specified `offset`.
@@ -1705,7 +1712,7 @@ console.log(buf.readUInt8(0));
 console.log(buf.readUInt8(1));
 // Prints: 254
 console.log(buf.readUInt8(2));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readUInt16BE(offset)
@@ -1713,13 +1720,14 @@ console.log(buf.readUInt8(2));
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 2`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 2`.
 * Returns: {integer}
 
 Reads an unsigned 16-bit integer from `buf` at the specified `offset` with
@@ -1738,7 +1746,7 @@ console.log(buf.readUInt16BE(1).toString(16));
 console.log(buf.readUInt16LE(1).toString(16));
 // Prints: 5634
 console.log(buf.readUInt16LE(2).toString(16));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readUInt32BE(offset)
@@ -1746,13 +1754,14 @@ console.log(buf.readUInt16LE(2).toString(16));
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {integer}
 
 Reads an unsigned 32-bit integer from `buf` at the specified `offset` with
@@ -1767,7 +1776,7 @@ console.log(buf.readUInt32BE(0).toString(16));
 console.log(buf.readUInt32LE(0).toString(16));
 // Prints: 78563412
 console.log(buf.readUInt32LE(1).toString(16));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.readUIntBE(offset, byteLength)
@@ -1775,14 +1784,16 @@ console.log(buf.readUInt32LE(1).toString(16));
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset and
-                 byteLength to uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 and `byteLength` to `uint32` anymore.
 -->
 
-* `offset` {integer} Number of bytes to skip before starting to read. Must satisfy: `0 <= offset <= buf.length - byteLength`.
-* `byteLength` {integer} Number of bytes to read. Must satisfy: `0 < byteLength <= 6`.
+* `offset` {integer} Number of bytes to skip before starting to read. Must
+  satisfy `0 <= offset <= buf.length - byteLength`.
+* `byteLength` {integer} Number of bytes to read. Must satisfy
+  `0 < byteLength <= 6`.
 * Returns: {integer}
 
 Reads `byteLength` number of bytes from `buf` at the specified `offset`
@@ -1797,7 +1808,7 @@ console.log(buf.readUIntBE(0, 6).toString(16));
 console.log(buf.readUIntLE(0, 6).toString(16));
 // Prints: ab9078563412
 console.log(buf.readUIntBE(1, 6).toString(16));
-// Throws an exception: RangeError: Index out of range
+// Throws ERR_OUT_OF_RANGE
 ```
 
 ### buf.slice([start[, end]])
@@ -1876,8 +1887,9 @@ added: v5.10.0
 
 * Returns: {Buffer} A reference to `buf`.
 
-Interprets `buf` as an array of unsigned 16-bit integers and swaps the byte-order
-*in-place*. Throws a `RangeError` if [`buf.length`] is not a multiple of 2.
+Interprets `buf` as an array of unsigned 16-bit integers and swaps the
+byte order *in-place*. Throws [`ERR_INVALID_BUFFER_SIZE`] if [`buf.length`] is
+not a multiple of 2.
 
 ```js
 const buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
@@ -1893,7 +1905,7 @@ console.log(buf1);
 const buf2 = Buffer.from([0x1, 0x2, 0x3]);
 
 buf2.swap16();
-// Throws an exception: RangeError: Buffer size must be a multiple of 16-bits
+// Throws ERR_INVALID_BUFFER_SIZE
 ```
 
 ### buf.swap32()
@@ -1903,8 +1915,9 @@ added: v5.10.0
 
 * Returns: {Buffer} A reference to `buf`.
 
-Interprets `buf` as an array of unsigned 32-bit integers and swaps the byte-order
-*in-place*. Throws a `RangeError` if [`buf.length`] is not a multiple of 4.
+Interprets `buf` as an array of unsigned 32-bit integers and swaps the
+byte order *in-place*. Throws [`ERR_INVALID_BUFFER_SIZE`] if [`buf.length`] is
+not a multiple of 4.
 
 ```js
 const buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
@@ -1920,7 +1933,7 @@ console.log(buf1);
 const buf2 = Buffer.from([0x1, 0x2, 0x3]);
 
 buf2.swap32();
-// Throws an exception: RangeError: Buffer size must be a multiple of 32-bits
+// Throws ERR_INVALID_BUFFER_SIZE
 ```
 
 ### buf.swap64()
@@ -1930,8 +1943,8 @@ added: v6.3.0
 
 * Returns: {Buffer} A reference to `buf`.
 
-Interprets `buf` as an array of 64-bit numbers and swaps the byte-order *in-place*.
-Throws a `RangeError` if [`buf.length`] is not a multiple of 8.
+Interprets `buf` as an array of 64-bit numbers and swaps byte order *in-place*.
+Throws [`ERR_INVALID_BUFFER_SIZE`] if [`buf.length`] is not a multiple of 8.
 
 ```js
 const buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
@@ -1947,7 +1960,7 @@ console.log(buf1);
 const buf2 = Buffer.from([0x1, 0x2, 0x3]);
 
 buf2.swap64();
-// Throws an exception: RangeError: Buffer size must be a multiple of 64-bits
+// Throws ERR_INVALID_BUFFER_SIZE
 ```
 
 Note that JavaScript cannot encode 64-bit integers. This method is intended
@@ -1985,7 +1998,7 @@ console.log(copy);
 added: v0.1.90
 -->
 
-* `encoding` {string} The character encoding to decode to. **Default:** `'utf8'`.
+* `encoding` {string} The character encoding to use. **Default:** `'utf8'`.
 * `start` {integer} The byte offset to start decoding at. **Default:** `0`.
 * `end` {integer} The byte offset to stop decoding at (not inclusive).
   **Default:** [`buf.length`].
@@ -2061,19 +2074,21 @@ for (const value of buf) {
 added: v0.1.90
 -->
 
-* `string` {string} String to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write `string`. **Default:** `0`.
-* `length` {integer} Number of bytes to write. **Default:** `buf.length - offset`.
+* `string` {string} String to write to `buf`.
+* `offset` {integer} Number of bytes to skip before starting to write `string`.
+  **Default:** `0`.
+* `length` {integer} Number of bytes to write. **Default:**
+  `buf.length - offset`.
 * `encoding` {string} The character encoding of `string`. **Default:** `'utf8'`.
 * Returns: {integer} Number of bytes written.
 
-Writes `string` to `buf` at `offset` according to the character encoding in `encoding`.
-The `length` parameter is the number of bytes to write. If `buf` did not contain
-enough space to fit the entire string, only a partial amount of `string` will
-be written. However, partially encoded characters will not be written.
+Writes `string` to `buf` at `offset` according to the character encoding in
+`encoding`. The `length` parameter is the number of bytes to write. If `buf` did
+not contain enough space to fit the entire string, only part of `string` will be
+written. However, partially encoded characters will not be written.
 
 ```js
-const buf = Buffer.allocUnsafe(256);
+const buf = Buffer.alloc(256);
 
 const len = buf.write('\u00bd + \u00bc = \u00be', 0);
 
@@ -2086,14 +2101,15 @@ console.log(`${len} bytes: ${buf.toString('utf8', 0, len)}`);
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {number} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 8`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 8`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
@@ -2120,14 +2136,15 @@ console.log(buf);
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {number} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
@@ -2153,14 +2170,15 @@ console.log(buf);
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 1`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 1`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset`. `value` *should* be a valid
@@ -2184,20 +2202,21 @@ console.log(buf);
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 2`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 2`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
 format (`writeInt16BE()` writes big endian, `writeInt16LE()` writes little
-endian). `value` *should* be a valid signed 16-bit integer. Behavior is undefined
-when `value` is anything other than a signed 16-bit integer.
+endian). `value` *should* be a valid signed 16-bit integer. Behavior is
+undefined when `value` is anything other than a signed 16-bit integer.
 
 `value` is interpreted and written as a two's complement signed integer.
 
@@ -2216,20 +2235,21 @@ console.log(buf);
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
 format (`writeInt32BE()` writes big endian, `writeInt32LE()` writes little
-endian). `value` *should* be a valid signed 32-bit integer. Behavior is undefined
-when `value` is anything other than a signed 32-bit integer.
+endian). `value` *should* be a valid signed 32-bit integer. Behavior is
+undefined when `value` is anything other than a signed 32-bit integer.
 
 `value` is interpreted and written as a two's complement signed integer.
 
@@ -2248,15 +2268,17 @@ console.log(buf);
 <!-- YAML
 added: v0.11.15
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset and
-                 byteLength to uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 and `byteLength` to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - byteLength`.
-* `byteLength` {integer} Number of bytes to write. Must satisfy: `0 < byteLength <= 6`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - byteLength`.
+* `byteLength` {integer} Number of bytes to write. Must satisfy
+  `0 < byteLength <= 6`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `byteLength` bytes of `value` to `buf` at the specified `offset`.
@@ -2281,14 +2303,15 @@ console.log(buf);
 <!-- YAML
 added: v0.5.0
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 1`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 1`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset`. `value` *should* be a
@@ -2312,14 +2335,15 @@ console.log(buf);
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 2`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 2`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
@@ -2348,14 +2372,15 @@ console.log(buf);
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset to
-                 uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write. Must satisfy: `0 <= offset <= buf.length - 4`.
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - 4`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
 Writes `value` to `buf` at the specified `offset` with specified endian
@@ -2382,16 +2407,16 @@ console.log(buf);
 <!-- YAML
 added: v0.5.5
 changes:
-  - version: REPLACEME
+  - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18395
-    description: Removed noAssert and no implicit coercion of the offset and
-                 byteLength to uint32 anymore.
+    description: Removed `noAssert` and no implicit coercion of the offset
+                 and `byteLength` to `uint32` anymore.
 -->
 
 * `value` {integer} Number to be written to `buf`.
-* `offset` {integer} Number of bytes to skip before starting to write.
-  Must satisfy: `0 <= offset <= buf.length - byteLength`.
-* `byteLength` {integer} Number of bytes to write. Must satisfy:
+* `offset` {integer} Number of bytes to skip before starting to write. Must
+  satisfy `0 <= offset <= buf.length - byteLength`.
+* `byteLength` {integer} Number of bytes to write. Must satisfy
   `0 < byteLength <= 6`.
 * Returns: {integer} `offset` plus the number of bytes written.
 
@@ -2434,7 +2459,7 @@ added: v3.0.0
 
 * {integer} The largest size allowed for a single `Buffer` instance.
 
-An alias for [`buffer.constants.MAX_LENGTH`][]
+An alias for [`buffer.constants.MAX_LENGTH`][].
 
 Note that this is a property on the `buffer` module returned by
 `require('buffer')`, not on the `Buffer` global or a `Buffer` instance.
@@ -2521,9 +2546,9 @@ deprecated: v6.0.0
 
 * `size` {integer} The desired length of the new `SlowBuffer`.
 
-Allocates a new `Buffer` of `size` bytes. If the `size` is larger than
-[`buffer.constants.MAX_LENGTH`] or smaller than 0, a [`RangeError`] will be
-thrown. A zero-length `Buffer` will be created if `size` is 0.
+Allocates a new `Buffer` of `size` bytes. If `size` is larger than
+[`buffer.constants.MAX_LENGTH`] or smaller than 0, [`ERR_INVALID_OPT_VALUE`] is
+thrown. A zero-length `Buffer` is created if `size` is 0.
 
 The underlying memory for `SlowBuffer` instances is *not initialized*. The
 contents of a newly created `SlowBuffer` are unknown and may contain sensitive
@@ -2582,13 +2607,15 @@ This value may depend on the JS engine that is being used.
 [`Buffer.allocUnsafe()`]: #buffer_class_method_buffer_allocunsafe_size
 [`Buffer.allocUnsafeSlow()`]: #buffer_class_method_buffer_allocunsafeslow_size
 [`Buffer.from(array)`]: #buffer_class_method_buffer_from_array
-[`Buffer.from(arrayBuffer)`]: #buffer_class_method_buffer_from_arraybuffer_byteoffset_length
+[`Buffer.from(arrayBuf)`]: #buffer_class_method_buffer_from_arraybuffer_byteoffset_length
 [`Buffer.from(buffer)`]: #buffer_class_method_buffer_from_buffer
 [`Buffer.from(string)`]: #buffer_class_method_buffer_from_string_encoding
 [`Buffer.poolSize`]: #buffer_class_property_buffer_poolsize
 [`DataView`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView
+[`ERR_INDEX_OUT_OF_RANGE`]: errors.html#ERR_INDEX_OUT_OF_RANGE
+[`ERR_INVALID_BUFFER_SIZE`]: errors.html#ERR_INVALID_BUFFER_SIZE
+[`ERR_INVALID_OPT_VALUE`]: errors.html#ERR_INVALID_OPT_VALUE
 [`JSON.stringify()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
-[`RangeError`]: errors.html#errors_class_rangeerror
 [`SharedArrayBuffer`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 [`String#indexOf()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf
 [`String#lastIndexOf()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/lastIndexOf

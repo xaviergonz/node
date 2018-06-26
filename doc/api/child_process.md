@@ -131,6 +131,9 @@ exec('"my script.cmd" a b', (err, stdout, stderr) => {
 <!-- YAML
 added: v0.1.90
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -153,7 +156,7 @@ changes:
   * `uid` {number} Sets the user identity of the process (see setuid(2)).
   * `gid` {number} Sets the group identity of the process (see setgid(2)).
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
 * `callback` {Function} called with the output when process terminates.
   * `error` {Error}
   * `stdout` {string|Buffer}
@@ -211,7 +214,7 @@ Unlike the exec(3) POSIX system call, `child_process.exec()` does not replace
 the existing process and uses a shell to execute the command.
 
 If this method is invoked as its [`util.promisify()`][]ed version, it returns
-a Promise for an object with `stdout` and `stderr` properties. In case of an
+a `Promise` for an `Object` with `stdout` and `stderr` properties. In case of an
 error (including any error resulting in an exit code other than 0), a rejected
 promise is returned, with the same `error` object given in the callback, but
 with an additional two properties `stdout` and `stderr`.
@@ -232,6 +235,9 @@ lsExample();
 <!-- YAML
 added: v0.1.91
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -251,7 +257,7 @@ changes:
   * `uid` {number} Sets the user identity of the process (see setuid(2)).
   * `gid` {number} Sets the group identity of the process (see setgid(2)).
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
   * `windowsVerbatimArguments` {boolean} No quoting or escaping of arguments is
     done on Windows. Ignored on Unix. **Default:** `false`.
   * `shell` {boolean|string} If `true`, runs `command` inside of a shell. Uses
@@ -290,7 +296,7 @@ stderr output. If `encoding` is `'buffer'`, or an unrecognized character
 encoding, `Buffer` objects will be passed to the callback instead.
 
 If this method is invoked as its [`util.promisify()`][]ed version, it returns
-a Promise for an object with `stdout` and `stderr` properties. In case of an
+a `Promise` for an `Object` with `stdout` and `stderr` properties. In case of an
 error (including any error resulting in an exit code other than 0), a rejected
 promise is returned, with the same `error` object given in the
 callback, but with an additional two properties `stdout` and `stderr`.
@@ -375,6 +381,9 @@ The `shell` option available in [`child_process.spawn()`][] is not supported by
 <!-- YAML
 added: v0.1.90
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -408,7 +417,7 @@ changes:
     done on Windows. Ignored on Unix. This is set to `true` automatically
     when `shell` is specified. **Default:** `false`.
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
 * Returns: {ChildProcess}
 
 The `child_process.spawn()` method spawns a new process using the given
@@ -456,7 +465,6 @@ ls.on('close', (code) => {
 });
 ```
 
-
 Example: A very elaborate way to run `ps ax | grep ssh`
 
 ```js
@@ -493,7 +501,6 @@ grep.on('close', (code) => {
   }
 });
 ```
-
 
 Example of checking for failed `spawn`:
 
@@ -608,9 +615,8 @@ pipes between the parent and child. The value is one of the following:
    between parent and child. A [`ChildProcess`][] may have at most *one* IPC stdio
    file descriptor. Setting this option enables the [`subprocess.send()`][]
    method. If the child is a Node.js process, the presence of an IPC channel
-   will enable [`process.send()`][], [`process.disconnect()`][],
-   [`process.on('disconnect')`][], and [`process.on('message')`] within the
-   child.
+   will enable [`process.send()`][] and [`process.disconnect()`][] methods,
+   as well as [`'disconnect'`][] and [`'message'`][] events within the child.
 
    Accessing the IPC channel fd in any way other than [`process.send()`][]
    or using the IPC channel with a child process that is not a Node.js instance
@@ -651,11 +657,17 @@ spawn('prg', [], { stdio: ['pipe', null, null, null, 'pipe'] });
 *It is worth noting that when an IPC channel is established between the
 parent and child processes, and the child is a Node.js process, the child
 is launched with the IPC channel unreferenced (using `unref()`) until the
-child registers an event handler for the [`process.on('disconnect')`][] event
-or the [`process.on('message')`][] event. This allows the child to exit
+child registers an event handler for the [`'disconnect'`][] event
+or the [`'message'`][] event. This allows the child to exit
 normally without the process being held open by the open IPC channel.*
 
-See also: [`child_process.exec()`][] and [`child_process.fork()`][]
+On UNIX-like operating systems, the [`child_process.spawn()`][] method
+performs memory operations synchronously before decoupling the event loop
+from the child. Applications with a large memory footprint may find frequent
+[`child_process.spawn()`][] calls to be a bottleneck. For more information,
+see [V8 issue 7381](https://bugs.chromium.org/p/v8/issues/detail?id=7381).
+
+See also: [`child_process.exec()`][] and [`child_process.fork()`][].
 
 ## Synchronous Process Creation
 
@@ -672,6 +684,9 @@ configuration at startup.
 <!-- YAML
 added: v0.11.12
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -705,7 +720,7 @@ changes:
   * `encoding` {string} The encoding used for all stdio inputs and outputs.
     **Default:** `'buffer'`.
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
   * `shell` {boolean|string} If `true`, runs `command` inside of a shell. Uses
     `'/bin/sh'` on UNIX, and `process.env.ComSpec` on Windows. A different
     shell can be specified as a string. See [Shell Requirements][] and
@@ -734,6 +749,9 @@ arbitrary command execution.**
 <!-- YAML
 added: v0.11.12
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -766,7 +784,7 @@ changes:
   * `encoding` {string} The encoding used for all stdio inputs and outputs.
     **Default:** `'buffer'`.
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
 * Returns: {Buffer|string} The stdout from the command.
 
 The `child_process.execSync()` method is generally identical to
@@ -779,7 +797,7 @@ process has exited.*
 
 If the process times out or has a non-zero exit code, this method ***will***
 throw. The [`Error`][] object will contain the entire result from
-[`child_process.spawnSync()`][]
+[`child_process.spawnSync()`][].
 
 **Never pass unsanitized user input to this function. Any input containing shell
 metacharacters may be used to trigger arbitrary command execution.**
@@ -788,6 +806,9 @@ metacharacters may be used to trigger arbitrary command execution.**
 <!-- YAML
 added: v0.11.12
 changes:
+  - version: REPLACEME
+    pr-url: https://github.com/nodejs/node/pull/21316
+    description: The `windowsHide` option now defaults to `true`.
   - version: v8.8.0
     pr-url: https://github.com/nodejs/node/pull/15380
     description: The `windowsHide` option is supported now.
@@ -829,7 +850,7 @@ changes:
     done on Windows. Ignored on Unix. This is set to `true` automatically
     when `shell` is specified. **Default:** `false`.
   * `windowsHide` {boolean} Hide the subprocess console window that would
-    normally be created on Windows systems. **Default:** `false`.
+    normally be created on Windows systems. **Default:** `true`.
 * Returns: {Object}
   * `pid` {number} Pid of the child process.
   * `output` {Array} Array of results from stdio output.
@@ -1059,7 +1080,7 @@ does not indicate that the child process has been terminated.
 added: v0.1.90
 -->
 
-* {number} Integer
+* {integer}
 
 Returns the process identifier (PID) of the child process.
 
@@ -1094,7 +1115,7 @@ changes:
 * `options` {Object} The `options` argument, if present, is an object used to
   parameterize the sending of certain types of handles. `options` supports
   the following properties:
-  * `keepOpen` - A Boolean value that can be used when passing instances of
+  * `keepOpen` {boolean} A value that can be used when passing instances of
     `net.Socket`. When `true`, the socket is kept open in the sending process.
     **Default:** `false`.
 * `callback` {Function}
@@ -1103,8 +1124,7 @@ changes:
 When an IPC channel has been established between the parent and child (
 i.e. when using [`child_process.fork()`][]), the `subprocess.send()` method can
 be used to send messages to the child process. When the child process is a
-Node.js instance, these messages can be received via the
-[`process.on('message')`][] event.
+Node.js instance, these messages can be received via the [`'message'`][] event.
 
 The message goes through serialization and parsing. The resulting
 message might not be the same as what is originally sent.
@@ -1139,16 +1159,16 @@ allows the child to send messages back to the parent.
 
 There is a special case when sending a `{cmd: 'NODE_foo'}` message. Messages
 containing a `NODE_` prefix in the `cmd` property are reserved for use within
-Node.js core and will not be emitted in the child's [`process.on('message')`][]
+Node.js core and will not be emitted in the child's [`'message'`][]
 event. Rather, such messages are emitted using the
-`process.on('internalMessage')` event and are consumed internally by Node.js.
+`'internalMessage'` event and are consumed internally by Node.js.
 Applications should avoid using such messages or listening for
 `'internalMessage'` events as it is subject to change without notice.
 
 The optional `sendHandle` argument that may be passed to `subprocess.send()` is
 for passing a TCP server or socket object to the child process. The child will
 receive the object as the second argument passed to the callback function
-registered on the [`process.on('message')`][] event. Any data that is received
+registered on the [`'message'`][] event. Any data that is received
 and buffered in the socket will not be sent to the child.
 
 The optional `callback` is a function that is invoked after the message is
@@ -1363,8 +1383,10 @@ the same requirement. Thus, in `child_process` functions where a shell can be
 spawned, `'cmd.exe'` is used as a fallback if `process.env.ComSpec` is
 unavailable.
 
+[`'disconnect'`]: process.html#process_event_disconnect
 [`'error'`]: #child_process_event_error
 [`'exit'`]: #child_process_event_exit
+[`'message'`]: process.html#process_event_message
 [`ChildProcess`]: #child_process_child_process
 [`Error`]: errors.html#errors_class_error
 [`EventEmitter`]: events.html#events_class_eventemitter
@@ -1389,8 +1411,6 @@ unavailable.
 [`process.disconnect()`]: process.html#process_process_disconnect
 [`process.env`]: process.html#process_process_env
 [`process.execPath`]: process.html#process_process_execpath
-[`process.on('disconnect')`]: process.html#process_event_disconnect
-[`process.on('message')`]: process.html#process_event_message
 [`process.send()`]: process.html#process_process_send_message_sendhandle_options_callback
 [`stdio`]: #child_process_options_stdio
 [`util.promisify()`]: util.html#util_util_promisify_original

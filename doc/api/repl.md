@@ -40,7 +40,7 @@ The following special commands are supported by all REPL instances:
   `> .save ./file/to/save.js`
 * `.load` - Load a file into the current REPL session.
   `> .load ./file/to/load.js`
-* `.editor` - Enter editor mode (`<ctrl>-D` to finish, `<ctrl>-C` to cancel)
+* `.editor` - Enter editor mode (`<ctrl>-D` to finish, `<ctrl>-C` to cancel).
 
 <!-- eslint-skip -->
 ```js
@@ -63,7 +63,7 @@ The following key combinations in the REPL have these special effects:
   When pressed twice on a blank line, has the same effect as the `.exit`
   command.
 * `<ctrl>-D` - Has the same effect as the `.exit` command.
-* `<tab>` - When pressed on a blank line, displays global and local(scope)
+* `<tab>` - When pressed on a blank line, displays global and local (scope)
   variables. When pressed while entering other input, displays relevant
   autocompletion options.
 
@@ -141,6 +141,17 @@ global or scoped variable, the input `fs` will be evaluated on-demand as
 > fs.createReadStream('./some/file');
 ```
 
+#### Global Uncaught Exceptions
+
+The REPL uses the [`domain`][] module to catch all uncaught exceptions for that
+REPL session.
+
+This use of the [`domain`][] module in the REPL has these side effects:
+
+* Uncaught exceptions do not emit the [`'uncaughtException'`][] event.
+* Trying to use [`process.setUncaughtExceptionCaptureCallback()`][] throws
+  an [`ERR_DOMAIN_CANNOT_SET_UNCAUGHT_EXCEPTION_CAPTURE`][] error.
+
 #### Assignment of the `_` (underscore) variable
 <!-- YAML
 changes:
@@ -177,6 +188,25 @@ Explicitly setting `_error` to a value will disable this behavior.
 Error: foo
 > _error.message
 'foo'
+```
+
+#### `await` keyword
+
+With the [`--experimental-repl-await`][] command line option specified,
+experimental support for the `await` keyword is enabled.
+
+<!-- eslint-skip -->
+```js
+> await Promise.resolve(123)
+123
+> await Promise.reject(new Error('REPL await'))
+Error: REPL await
+    at repl:1:45
+> const timeout = util.promisify(setTimeout);
+undefined
+> const old = Date.now(); await timeout(1000); console.log(Date.now() - old);
+1002
+undefined
 ```
 
 ### Custom Evaluation Functions
@@ -232,7 +262,7 @@ function isRecoverableError(error) {
 ### Customizing REPL Output
 
 By default, `repl.REPLServer` instances format output using the
-[`util.inspect()`][] method before writing the output to the provided Writable
+[`util.inspect()`][] method before writing the output to the provided `Writable`
 stream (`process.stdout` by default). The `useColors` boolean option can be
 specified at construction to instruct the default writer to use ANSI style
 codes to colorize the output from the `util.inspect()` method.
@@ -337,7 +367,7 @@ added: v0.3.0
 
 The `replServer.defineCommand()` method is used to add new `.`-prefixed commands
 to the REPL instance. Such commands are invoked by typing a `.` followed by the
-`keyword`. The `cmd` is either a Function or an object with the following
+`keyword`. The `cmd` is either a `Function` or an `Object` with the following
 properties:
 
 * `help` {string} Help text to be displayed when `.help` is entered (Optional).
@@ -411,6 +441,7 @@ deprecated: v9.0.0
 
 * `keyword` {string} the potential keyword to parse and execute
 * `rest` {any} any parameters to the keyword command
+* Returns: {boolean}
 
 > Stability: 0 - Deprecated.
 
@@ -421,9 +452,9 @@ Returns `true` if `keyword` is a valid keyword, otherwise `false`.
 <!-- YAML
 added: v0.1.91
 changes:
-  - version: REPLACEME
-    pr-url: https://github.com/nodejs/node/pull/REPLACEME
-    description: The `REPL_MAGIC_MODE` replMode was removed.
+  - version: v10.0.0
+    pr-url: https://github.com/nodejs/node/pull/v10.0.0
+    description: The `REPL_MAGIC_MODE` `replMode` was removed.
   - version: v5.8.0
     pr-url: https://github.com/nodejs/node/pull/5388
     description: The `options` parameter is optional now.
@@ -432,10 +463,10 @@ changes:
 * `options` {Object|string}
   * `prompt` {string} The input prompt to display. **Default:** `'> '`
     (with a trailing space).
-  * `input` {stream.Readable} The Readable stream from which REPL input will be
-    read. **Default:** `process.stdin`.
-  * `output` {stream.Writable} The Writable stream to which REPL output will be
-    written. **Default:** `process.stdout`.
+  * `input` {stream.Readable} The `Readable` stream from which REPL input will
+    be read. **Default:** `process.stdin`.
+  * `output` {stream.Writable} The `Writable` stream to which REPL output will
+    be written. **Default:** `process.stdout`.
   * `terminal` {boolean} If `true`, specifies that the `output` should be
     treated as a TTY terminal, and have ANSI/VT100 escape codes written to it.
     **Default:** checking the value of the `isTTY` property on the `output`
@@ -587,11 +618,17 @@ By starting a REPL from a Unix socket-based server instead of stdin, it is
 possible to connect to a long-running Node.js process without restarting it.
 
 For an example of running a "full-featured" (`terminal`) REPL over
-a `net.Server` and `net.Socket` instance, see: https://gist.github.com/2209310
+a `net.Server` and `net.Socket` instance, see:
+[https://gist.github.com/2209310](https://gist.github.com/2209310).
 
-For an example of running a REPL instance over [curl(1)][],
-see: https://gist.github.com/2053342
+For an example of running a REPL instance over [curl(1)][], see:
+[https://gist.github.com/2053342](https://gist.github.com/2053342).
 
+[`'uncaughtException'`]: process.html#process_event_uncaughtexception
+[`--experimental-repl-await`]: cli.html#cli_experimental_repl_await
+[`ERR_DOMAIN_CANNOT_SET_UNCAUGHT_EXCEPTION_CAPTURE`]: errors.html#errors_err_domain_cannot_set_uncaught_exception_capture
+[`domain`]: domain.html
+[`process.setUncaughtExceptionCaptureCallback()`]: process.html#process_process_setuncaughtexceptioncapturecallback_fn
 [`readline.InterfaceCompleter`]: readline.html#readline_use_of_the_completer_function
 [`readline.Interface`]: readline.html#readline_class_interface
 [`util.inspect()`]: util.html#util_util_inspect_object_options

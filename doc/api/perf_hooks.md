@@ -219,26 +219,6 @@ The high resolution millisecond timestamp at which the Node.js process
 completed bootstrapping. If bootstrapping has not yet finished, the property
 has the value of -1.
 
-### performanceNodeTiming.clusterSetupEnd
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which cluster processing ended. If
-cluster processing has not yet ended, the property has the value of -1.
-
-### performanceNodeTiming.clusterSetupStart
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which cluster processing started.
-If cluster processing has not yet started, the property has the value of -1.
-
 ### performanceNodeTiming.loopExit
 <!-- YAML
 added: v8.5.0
@@ -261,24 +241,6 @@ The high resolution millisecond timestamp at which the Node.js event loop
 started. If the event loop has not yet started (e.g., in the first tick of the
 main script), the property has the value of -1.
 
-### performanceNodeTiming.moduleLoadEnd
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which main module load ended.
-
-### performanceNodeTiming.moduleLoadStart
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which main module load started.
-
 ### performanceNodeTiming.nodeStart
 <!-- YAML
 added: v8.5.0
@@ -288,46 +250,6 @@ added: v8.5.0
 
 The high resolution millisecond timestamp at which the Node.js process was
 initialized.
-
-### performanceNodeTiming.preloadModuleLoadEnd
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which preload module load ended.
-
-### performanceNodeTiming.preloadModuleLoadStart
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which preload module load started.
-
-### performanceNodeTiming.thirdPartyMainEnd
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which third\_party\_main
-processing ended. If third\_party\_main processing has not yet ended, the
-property has the value of -1.
-
-### performanceNodeTiming.thirdPartyMainStart
-<!-- YAML
-added: v8.5.0
--->
-
-* {number}
-
-The high resolution millisecond timestamp at which third\_party\_main
-processing started. If third\_party\_main processing has not yet started, the
-property has the value of -1.
 
 ### performanceNodeTiming.v8Start
 <!-- YAML
@@ -339,13 +261,16 @@ added: v8.5.0
 The high resolution millisecond timestamp at which the V8 platform was
 initialized.
 
+## Class: PerformanceObserver
 
-## Class: PerformanceObserver(callback)
+### new PerformanceObserver(callback)
 <!-- YAML
 added: v8.5.0
 -->
 
-* `callback` {Function} A `PerformanceObserverCallback` callback function.
+* `callback` {Function}
+  * `list` {PerformanceObserverEntryList}
+  * `observer` {PerformanceObserver}
 
 `PerformanceObserver` objects provide notifications when new
 `PerformanceEntry` instances have been added to the Performance Timeline.
@@ -364,68 +289,15 @@ obs.observe({ entryTypes: ['mark'], buffered: true });
 
 performance.mark('test');
 ```
-
 Because `PerformanceObserver` instances introduce their own additional
 performance overhead, instances should not be left subscribed to notifications
 indefinitely. Users should disconnect observers as soon as they are no
 longer needed.
 
-### Callback: PerformanceObserverCallback(list, observer)
-<!-- YAML
-added: v8.5.0
--->
-
-* `list` {PerformanceObserverEntryList}
-* `observer` {PerformanceObserver}
-
-The `PerformanceObserverCallback` is invoked when a `PerformanceObserver` is
+The `callback` is invoked when a `PerformanceObserver` is
 notified about new `PerformanceEntry` instances. The callback receives a
 `PerformanceObserverEntryList` instance and a reference to the
 `PerformanceObserver`.
-
-### Class: PerformanceObserverEntryList
-<!-- YAML
-added: v8.5.0
--->
-
-The `PerformanceObserverEntryList` class is used to provide access to the
-`PerformanceEntry` instances passed to a `PerformanceObserver`.
-
-#### performanceObserverEntryList.getEntries()
-<!-- YAML
-added: v8.5.0
--->
-
-* Returns: {PerformanceEntry[]}
-
-Returns a list of `PerformanceEntry` objects in chronological order
-with respect to `performanceEntry.startTime`.
-
-#### performanceObserverEntryList.getEntriesByName(name[, type])
-<!-- YAML
-added: v8.5.0
--->
-
-* `name` {string}
-* `type` {string}
-* Returns: {PerformanceEntry[]}
-
-Returns a list of `PerformanceEntry` objects in chronological order
-with respect to `performanceEntry.startTime` whose `performanceEntry.name` is
-equal to `name`, and optionally, whose `performanceEntry.entryType` is equal to
-`type`.
-
-#### performanceObserverEntryList.getEntriesByType(type)
-<!-- YAML
-added: v8.5.0
--->
-
-* `type` {string}
-* Returns: {PerformanceEntry[]}
-
-Returns a list of `PerformanceEntry` objects in chronological order
-with respect to `performanceEntry.startTime` whose `performanceEntry.entryType`
-is equal to `type`.
 
 ### performanceObserver.disconnect()
 <!-- YAML
@@ -481,6 +353,50 @@ obs.observe({ entryTypes: ['mark'], buffered: true });
 for (let n = 0; n < 3; n++)
   performance.mark(`test${n}`);
 ```
+
+## Class: PerformanceObserverEntryList
+<!-- YAML
+added: v8.5.0
+-->
+
+The `PerformanceObserverEntryList` class is used to provide access to the
+`PerformanceEntry` instances passed to a `PerformanceObserver`.
+
+### performanceObserverEntryList.getEntries()
+<!-- YAML
+added: v8.5.0
+-->
+
+* Returns: {PerformanceEntry[]}
+
+Returns a list of `PerformanceEntry` objects in chronological order
+with respect to `performanceEntry.startTime`.
+
+### performanceObserverEntryList.getEntriesByName(name[, type])
+<!-- YAML
+added: v8.5.0
+-->
+
+* `name` {string}
+* `type` {string}
+* Returns: {PerformanceEntry[]}
+
+Returns a list of `PerformanceEntry` objects in chronological order
+with respect to `performanceEntry.startTime` whose `performanceEntry.name` is
+equal to `name`, and optionally, whose `performanceEntry.entryType` is equal to
+`type`.
+
+### performanceObserverEntryList.getEntriesByType(type)
+<!-- YAML
+added: v8.5.0
+-->
+
+* `type` {string}
+* Returns: {PerformanceEntry[]}
+
+Returns a list of `PerformanceEntry` objects in chronological order
+with respect to `performanceEntry.startTime` whose `performanceEntry.entryType`
+is equal to `type`.
 
 ## Examples
 

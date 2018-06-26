@@ -23,6 +23,7 @@
 #include "env-inl.h"
 #include "util-inl.h"
 #include "node.h"
+#include "node_internals.h"
 #include "handle_wrap.h"
 #include "string_bytes.h"
 
@@ -77,16 +78,17 @@ FSEventWrap::FSEventWrap(Environment* env, Local<Object> object)
     : HandleWrap(env,
                  object,
                  reinterpret_cast<uv_handle_t*>(&handle_),
-                 AsyncWrap::PROVIDER_FSEVENTWRAP) {}
+                 AsyncWrap::PROVIDER_FSEVENTWRAP) {
+  MarkAsUninitialized();
+}
 
 
 FSEventWrap::~FSEventWrap() {
-  CHECK_EQ(initialized_, false);
 }
 
 void FSEventWrap::GetInitialized(const FunctionCallbackInfo<Value>& args) {
   FSEventWrap* wrap = Unwrap<FSEventWrap>(args.This());
-  CHECK(wrap != nullptr);
+  CHECK_NOT_NULL(wrap);
   args.GetReturnValue().Set(wrap->initialized_);
 }
 
@@ -130,15 +132,15 @@ void FSEventWrap::New(const FunctionCallbackInfo<Value>& args) {
 void FSEventWrap::Start(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
 
-  FSEventWrap* wrap = Unwrap<FSEventWrap>(args.Holder());
-  CHECK_NE(wrap, nullptr);
+  FSEventWrap* wrap = Unwrap<FSEventWrap>(args.This());
+  CHECK_NOT_NULL(wrap);
   CHECK(!wrap->initialized_);
 
   const int argc = args.Length();
   CHECK_GE(argc, 4);
 
   BufferValue path(env->isolate(), args[0]);
-  CHECK_NE(*path, nullptr);
+  CHECK_NOT_NULL(*path);
 
   unsigned int flags = 0;
   if (args[2]->IsTrue())
@@ -152,6 +154,7 @@ void FSEventWrap::Start(const FunctionCallbackInfo<Value>& args) {
   }
 
   err = uv_fs_event_start(&wrap->handle_, OnEvent, *path, flags);
+  wrap->MarkAsInitialized();
   wrap->initialized_ = true;
 
   if (err != 0) {
@@ -230,7 +233,7 @@ void FSEventWrap::OnEvent(uv_fs_event_t* handle, const char* filename,
 
 void FSEventWrap::Close(const FunctionCallbackInfo<Value>& args) {
   FSEventWrap* wrap = Unwrap<FSEventWrap>(args.Holder());
-  CHECK_NE(wrap, nullptr);
+  CHECK_NOT_NULL(wrap);
   CHECK(wrap->initialized_);
 
   wrap->initialized_ = false;

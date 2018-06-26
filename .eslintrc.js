@@ -131,7 +131,7 @@ module.exports = {
       {
         object: 'assert',
         property: 'equal',
-        message: 'Use assert.astrictEqual() rather than assert.equal().',
+        message: 'Use assert.strictEqual() rather than assert.equal().',
       },
       {
         object: 'assert',
@@ -147,28 +147,32 @@ module.exports = {
         message: '__defineSetter__ is deprecated.',
       }
     ],
-    /* eslint-disable max-len, quotes */
+    /* eslint-disable max-len */
     // If this list is modified, please copy the change to lib/.eslintrc.yaml
     'no-restricted-syntax': [
       'error',
       {
         selector: "CallExpression[callee.object.name='assert'][callee.property.name='doesNotThrow']",
-        message: "Please replace `assert.doesNotThrow()` and add a comment next to the code instead."
+        message: 'Please replace `assert.doesNotThrow()` and add a comment next to the code instead.'
       },
       {
-        selector: `CallExpression[callee.object.name='assert'][callee.property.name='throws'][arguments.1.type='Literal']:not([arguments.1.regex])`,
-        message: 'use a regular expression for second argument of assert.throws()',
+        selector: "CallExpression[callee.object.name='assert'][callee.property.name='rejects'][arguments.length<2]",
+        message: 'assert.rejects() must be invoked with at least two arguments.',
       },
       {
-        selector: `CallExpression[callee.object.name='assert'][callee.property.name='throws'][arguments.length<2]`,
+        selector: "CallExpression[callee.object.name='assert'][callee.property.name='throws'][arguments.1.type='Literal']:not([arguments.1.regex])",
+        message: 'Use an object as second argument of assert.throws()',
+      },
+      {
+        selector: "CallExpression[callee.object.name='assert'][callee.property.name='throws'][arguments.length<2]",
         message: 'assert.throws() must be invoked with at least two arguments.',
       },
       {
-        selector: `CallExpression[callee.name='setTimeout'][arguments.length<2]`,
+        selector: "CallExpression[callee.name='setTimeout'][arguments.length<2]",
         message: 'setTimeout() must be invoked with at least two arguments.',
       },
       {
-        selector: `CallExpression[callee.name='setInterval'][arguments.length<2]`,
+        selector: "CallExpression[callee.name='setInterval'][arguments.length<2]",
         message: 'setInterval() must be invoked with at least 2 arguments.',
       },
       {
@@ -185,7 +189,7 @@ module.exports = {
     'no-this-before-super': 'error',
     'no-throw-literal': 'error',
     'no-trailing-spaces': 'error',
-    'no-undef': 'error',
+    'no-undef': ['error', { typeof: true }],
     'no-undef-init': 'error',
     'no-unexpected-multiline': 'error',
     'no-unreachable': 'error',
@@ -239,6 +243,10 @@ module.exports = {
     'node-core/no-unescaped-regexp-dot': 'error',
   },
   globals: {
+    Atomics: false,
+    BigInt: false,
+    BigInt64Array: false,
+    BigUint64Array: false,
     COUNTER_HTTP_CLIENT_REQUEST: false,
     COUNTER_HTTP_CLIENT_RESPONSE: false,
     COUNTER_HTTP_SERVER_REQUEST: false,

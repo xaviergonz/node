@@ -15,19 +15,20 @@ const jsPrimitives = {
 
 const jsGlobalObjectsUrl = `${jsDocPrefix}Reference/Global_Objects/`;
 const jsGlobalTypes = [
-  'Array', 'ArrayBuffer', 'AsyncFunction', 'DataView', 'Date', 'Error',
-  'EvalError', 'Float32Array', 'Float64Array', 'Function', 'Generator',
-  'GeneratorFunction', 'Int16Array', 'Int32Array', 'Int8Array', 'Map', 'Object',
-  'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set',
+  'Array', 'ArrayBuffer', 'DataView', 'Date', 'Error', 'EvalError', 'Function',
+  'Object', 'Promise', 'RangeError', 'ReferenceError', 'RegExp',
   'SharedArrayBuffer', 'SyntaxError', 'TypeError', 'TypedArray', 'URIError',
-  'Uint16Array', 'Uint32Array', 'Uint8Array', 'Uint8ClampedArray', 'WeakMap',
-  'WeakSet'
+  'Uint8Array',
 ];
 
 const customTypesMap = {
   'any': `${jsDataStructuresUrl}#Data_types`,
 
   'this': `${jsDocPrefix}Reference/Operators/this`,
+
+  'AsyncIterator': 'https://github.com/tc39/proposal-async-iteration',
+
+  'bigint': 'https://github.com/tc39/proposal-bigint',
 
   'Iterable':
     `${jsDocPrefix}Reference/Iteration_protocols#The_iterable_protocol`,
@@ -57,7 +58,10 @@ const customTypesMap = {
   'EventEmitter': 'events.html#events_class_eventemitter',
 
   'FileHandle': 'fs.html#fs_class_filehandle',
+  'fs.FSWatcher': 'fs.html#fs_class_fs_fswatcher',
+  'fs.ReadStream': 'fs.html#fs_class_fs_readstream',
   'fs.Stats': 'fs.html#fs_class_fs_stats',
+  'fs.WriteStream': 'fs.html#fs_class_fs_writestream',
 
   'http.Agent': 'http.html#http_class_http_agent',
   'http.ClientRequest': 'http.html#http_class_http_clientrequest',
@@ -78,11 +82,11 @@ const customTypesMap = {
   'Http2Stream': 'http2.html#http2_class_http2stream',
   'ServerHttp2Stream': 'http2.html#http2_class_serverhttp2stream',
 
+  'module': 'modules.html#modules_the_module_object',
+
   'Handle': 'net.html#net_server_listen_handle_backlog_callback',
   'net.Server': 'net.html#net_class_net_server',
   'net.Socket': 'net.html#net_class_net_socket',
-
-  'module': 'modules.html#modules_the_module_object',
 
   'os.constants.dlopen': 'os.html#os_dlopen_constants',
 
@@ -90,7 +94,7 @@ const customTypesMap = {
   'PerformanceNodeTiming':
     'perf_hooks.html#perf_hooks_class_performancenodetiming_extends_performanceentry', // eslint-disable-line max-len
   'PerformanceObserver':
-    'perf_hooks.html#perf_hooks_class_performanceobserver_callback',
+    'perf_hooks.html#perf_hooks_class_performanceobserver',
   'PerformanceObserverEntryList':
     'perf_hooks.html#perf_hooks_class_performanceobserverentrylist',
 
@@ -105,11 +109,16 @@ const customTypesMap = {
   'Timeout': 'timers.html#timers_class_timeout',
   'Timer': 'timers.html#timers_timers',
 
+  'tls.SecureContext': 'tls.html#tls_tls_createsecurecontext_options',
   'tls.Server': 'tls.html#tls_class_tls_server',
   'tls.TLSSocket': 'tls.html#tls_class_tls_tlssocket',
 
+  'Tracing': 'tracing.html#tracing_tracing_object',
+
   'URL': 'url.html#url_the_whatwg_url_api',
-  'URLSearchParams': 'url.html#url_class_urlsearchparams'
+  'URLSearchParams': 'url.html#url_class_urlsearchparams',
+
+  'MessagePort': 'worker.html#worker_class_messageport'
 };
 
 const arrayPart = /(?:\[])+$/;
@@ -122,7 +131,7 @@ function toLink(typeInput) {
   typeTexts.forEach((typeText) => {
     typeText = typeText.trim();
     if (typeText) {
-      let typeUrl = null;
+      let typeUrl;
 
       // To support type[], type[][] etc., we store the full string
       // and use the bracket-less version to lookup the type URL.
@@ -135,7 +144,7 @@ function toLink(typeInput) {
         typeUrl = `${jsDataStructuresUrl}#${primitive}_type`;
       } else if (jsGlobalTypes.includes(typeText)) {
         typeUrl = `${jsGlobalObjectsUrl}${typeText}`;
-      } else if (customTypesMap[typeText]) {
+      } else {
         typeUrl = customTypesMap[typeText];
       }
 
